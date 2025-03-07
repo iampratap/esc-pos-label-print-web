@@ -2,21 +2,24 @@
 <html>
 
 <head>
-  <title>Thermal lable Printer Canvas</title>
+  <title>Thermal Printer Canvas</title>
   <style>
     canvas {
       border: 1px solid black;
     }
   </style>
+  <script src="https://unpkg.com/jsbarcode@latest/dist/JsBarcode.all.min.js"></script>
 </head>
 
 <body>
-  <h1>50mm x 25mm</h1>
+
   <canvas id="myCanvas" width="300" height="150"></canvas>
   <br>
+  <img id="barcodeImg" style="display: none;" /><br>
   <input type="text" id="shopName" placeholder="Shop Name" onkeyup="updateText()" value="Pratapsigh Hajari"><br>
   <input type="text" id="productName" placeholder="Product Name" onkeyup="updateText()" value="+919970530520"><br>
   <input type="text" id="price" placeholder="Price" onkeyup="updateText()" value="ESC/POS lable Printer DEMO"><br>
+  <input type="text" id="barcode" placeholder="Barcode" onkeyup="updateText()" value="+919970530520"><br>
   <input type="number" id="prints" placeholder="Prints" onkeyup="setPrints()" value="1"><br>
   <button id="printButton">Print</button>
 
@@ -32,7 +35,7 @@
     let shopName = "Pratapsigh Hajari";
     let productName = "+919970530520";
     let price = "ESC/POS lable Printer DEMO";
-
+    let barcode = "+919970530520";
     function setPrints() {
       prints = Number(document.getElementById("prints").value);
     }
@@ -41,7 +44,8 @@
       shopName = document.getElementById("shopName").value;
       productName = document.getElementById("productName").value;
       price = document.getElementById("price").value;
-      console.log(shopName, productName, price);
+      barcode = document.getElementById("barcode").value;
+      console.log(shopName, productName, price, barcode);
       drawText();
     }
 
@@ -65,10 +69,23 @@
       ctx.fillText(shopName, canvasWidth / 2.7, 25);
 
       // Product Name (middle center)
-      ctx.fillText(productName, canvasWidth / 2.7, 75);
+      ctx.fillText(productName, canvasWidth / 2.7, 50);
 
       // Price (bottom center)
-      ctx.fillText(price, canvasWidth / 2.7, 125);
+      ctx.fillText(price, canvasWidth / 2.7, 75);
+
+      // Barcode (bottom center)
+      JsBarcode("#barcodeImg", barcode, {
+        width: 2,
+        height: 40,
+        displayValue: false
+      });
+      setTimeout(() => {
+        const barcodeImg = document.getElementById("barcodeImg").src;
+        const img = new Image();
+        img.src = barcodeImg;
+        ctx.drawImage(img, 10, 80);
+      }, 100);
     }
 
     // Draw the initial text
