@@ -1,1 +1,1 @@
-# escpos-lable-print-web
+# escpos-label-print-web
