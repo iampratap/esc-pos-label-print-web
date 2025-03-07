@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Thermal lable Printer Canvas</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>50mm x 25mm</h1>
+  <canvas id="myCanvas" width="300" height="150"></canvas>
+  <br>
+  <input type="text" id="shopName" placeholder="Shop Name" onkeyup="updateText()" value="Pratapsigh Hajari"><br>
+  <input type="text" id="productName" placeholder="Product Name" onkeyup="updateText()" value="+919970530520"><br>
+  <input type="text" id="price" placeholder="Price" onkeyup="updateText()" value="ESC/POS lable Printer DEMO"><br>
+  <input type="number" id="prints" placeholder="Prints" onkeyup="setPrints()" value="1"><br>
+  <button id="printButton">Print</button>
+
+  <script>
+    // Constants for canvas dimensions (in pixels, based on 8 dots/mm)
+    // const canvasWidth = 189; // 50mm * 8 dots/mm - 1
+    // const canvasHeight = 94; // 25mm * 8 dots/mm - 1
+    const canvasWidth = 400; // 50mm * 8 dots/mm - 1
+    const canvasHeight = 200; // 25mm * 8 dots/mm - 1
+
+    let prints = 1;
+    // Shop, product, and price data
+    let shopName = "Pratapsigh Hajari";
+    let productName = "+919970530520";
+    let price = "ESC/POS lable Printer DEMO";
+
+    function setPrints() {
+      prints = Number(document.getElementById("prints").value);
+    }
+
+    function updateText() {
+      shopName = document.getElementById("shopName").value;
+      productName = document.getElementById("productName").value;
+      price = document.getElementById("price").value;
+      console.log(shopName, productName, price);
+      drawText();
+    }
+
+
+    // Get the canvas element
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Function to draw text on the canvas
+    function drawText() {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "20px sans-serif";
+      ctx.textAlign = "center";
+
+      // Shop Name (top center)
+      ctx.fillText(shopName, canvasWidth / 2.7, 25);
+
+      // Product Name (middle center)
+      ctx.fillText(productName, canvasWidth / 2.7, 75);
+
+      // Price (bottom center)
+      ctx.fillText(price, canvasWidth / 2.7, 125);
+    }
+
+    // Draw the initial text
+    drawText();
+
+    // Print button click event
+    document.getElementById("printButton").addEventListener("click", () => {
+      printCanvas();
+    });
+
+    // Function to print the canvas using ESC/POS commands
+    async function printCanvas() {
+      try {
+        const canvasDataURL = canvas.toDataURL('image/png'); // Get canvas as PNG
+        const img = new Image();
+        img.src = canvasDataURL;
+
+        img.onload = async () => {
+          const canvas2 = document.createElement('canvas'); // Create a temporary canvas
+          canvas2.width = canvasWidth;
+          canvas2.height = canvasHeight;
+          const ctx2 = canvas2.getContext('2d');
+          ctx2.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+          const imageData = ctx2.getImageData(0, 0, canvasWidth, canvasHeight);
+          const binaryData = convertImageDataToBinary(imageData);
+          const escposCommands = generateEscPosCommands(binaryData, canvasWidth, canvasHeight);
+
+          // Replace with your Bluetooth printer connection logic
+          await sendToBluetoothPrinter(escposCommands);
+
+        };
+
+      } catch (error) {
+        console.error("Error printing:", error);
+      }
+    }
+
+    // Function to convert image data to binary data (for ESC/POS)
+    function convertImageDataToBinary(imageData) {
+      const binaryData = [];
+      for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x += 8) {
+          let byte = 0;
+          for (let bit = 0; bit < 8; bit++) {
+            const index = (y * imageData.width + x + bit) * 4;
+            if (x + bit < imageData.width) {
+              // Convert to grayscale
+              const r = imageData.data[index];
+              const g = imageData.data[index + 1];
+              const b = imageData.data[index + 2];
+              const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
+              if (grayscale < 128) { // Check for black pixel
+                byte |= (1 << (7 - bit)); // Set the corresponding bit
+              }
+            }
+          }
+          binaryData.push(byte);
+        }
+      }
+      return binaryData;
+    }
+
+    // Function to generate ESC/POS commands for bitmap printing
+    function generateEscPosCommands(binaryData, width, height) {
+      const escposCommands = new Uint8Array([
+        29, 118, 48, 0, // Select bit-image mode
+        width / 8, 0, // Width (bytes)
+        height, 0, // Height
+        ...binaryData, // Image data
+        29, 86, 66, 1, // Cut the paper
+      ]);
+      return escposCommands;
+    }
+
+    // Placeholder function for sending data to a Bluetooth printer
+    async function sendToBluetoothPrinter(escposCommands) {
+
+      //This section requires a bluetooth library. The Web Bluetooth API is not supported by all browsers and requires HTTPS.
+      //For a mobile app, you would likely use a native plugin.
+      console.log("ESC/POS Commands:", escposCommands);
+      // alert("Print function called. Bluetooth implementation is required.");
+      // Example using Web Bluetooth API (requires HTTPS and user permission)
+
+      try {
+        navigator.bluetooth.requestDevice({
+          filters: [{
+            services: ['000018f0-0000-1000-8000-00805f9b34fb'] // thermal printer only
+          }]
+        })
+          .then((device) => {
+            console.log('> Found ' + device.name);
+            console.log('Connecting to GATT Server...');
+            return device.gatt.connect();
+          })
+          .then((server) => server.getPrimaryService("000018f0-0000-1000-8000-00805f9b34fb")) // init the server
+          .then((service) => service.getCharacteristic("00002af1-0000-1000-8000-00805f9b34fb")) // init the service
+          .then(async (characteristic) => {
+            console.log('Characteristic found:', characteristic);
+            // await characteristic.writeValue(escposCommands);
+
+            for (let i = 0; i < prints; i++) {
+              const chunkSize = 512; // Maximum allowed chunk size
+              let offset = 0;
+
+              while (offset < escposCommands.length) {
+                const chunk = escposCommands.slice(offset, offset + chunkSize);
+                await characteristic.writeValue(chunk);
+                offset += chunkSize;
+              }
+            }
+
+            console.log("Print job sent successfully.");
+          });
+      } catch (error) {
+        console.error("Bluetooth error:", error);
+      }
+    }
+
+  </script>
+
+</body>
+
+</html>
