@@ -2,210 +2,242 @@
 <html>
 
 <head>
-  <title>Thermal Printer Canvas</title>
-  <style>
-    canvas {
-      border: 1px solid black;
-    }
-  </style>
-  <script src="https://unpkg.com/jsbarcode@latest/dist/JsBarcode.all.min.js"></script>
+    <title>Thermal Printer Canvas</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+
+        body {
+            width: 100;
+            text-align: center;
+        }
+
+        .printbox {
+            width: 300px;
+            margin: 0 auto;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        input {
+            border: 1px solid #000;
+            width: 100%;
+            padding: 5px;
+            margin: 4px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            border: 1px solid #000;
+            padding: 5px;
+            box-sizing: border-box;
+            width: 100%;
+            margin: 10px 0;
+            cursor: pointer;
+            background-color: #000;
+            color: #fff;
+        }
+    </style>
+    <script src="https://unpkg.com/jsbarcode@latest/dist/JsBarcode.all.min.js"></script>
 </head>
 
 <body>
+    <div class="printbox">
+        <canvas id="myCanvas" width="300" height="150"></canvas>
+        <br>
+        <img id="barcodeImg" style="display: none;" /><br>
+        <input type="text" id="shopName" placeholder="Shop Name" onkeyup="updateText()" value="Pratapsigh Hajari"><br>
+        <input type="text" id="productName" placeholder="Product Name" onkeyup="updateText()" value="+919970530520"><br>
+        <input type="text" id="price" placeholder="Price" onkeyup="updateText()" value="ESC/POS lable Printer DEMO"><br>
+        <input type="text" id="barcode" placeholder="Barcode" onkeyup="updateText()" value="+919970530520"><br>
+        <input type="number" id="prints" placeholder="Prints" onkeyup="setPrints()" value="1"><br>
+        <button id="printButton">Print</button>
+    </div>
 
-  <canvas id="myCanvas" width="300" height="150"></canvas>
-  <br>
-  <img id="barcodeImg" style="display: none;" /><br>
-  <input type="text" id="shopName" placeholder="Shop Name" onkeyup="updateText()" value="Pratapsigh Hajari"><br>
-  <input type="text" id="productName" placeholder="Product Name" onkeyup="updateText()" value="+919970530520"><br>
-  <input type="text" id="price" placeholder="Price" onkeyup="updateText()" value="ESC/POS lable Printer DEMO"><br>
-  <input type="text" id="barcode" placeholder="Barcode" onkeyup="updateText()" value="+919970530520"><br>
-  <input type="number" id="prints" placeholder="Prints" onkeyup="setPrints()" value="1"><br>
-  <button id="printButton">Print</button>
+    <script>
+        // Constants for canvas dimensions (in pixels, based on 8 dots/mm)
+        // const canvasWidth = 189; // 50mm * 8 dots/mm - 1
+        // const canvasHeight = 94; // 25mm * 8 dots/mm - 1
+        const canvasWidth = 400; // 50mm * 8 dots/mm - 1
+        const canvasHeight = 200; // 25mm * 8 dots/mm - 1
 
-  <script>
-    // Constants for canvas dimensions (in pixels, based on 8 dots/mm)
-    // const canvasWidth = 189; // 50mm * 8 dots/mm - 1
-    // const canvasHeight = 94; // 25mm * 8 dots/mm - 1
-    const canvasWidth = 400; // 50mm * 8 dots/mm - 1
-    const canvasHeight = 200; // 25mm * 8 dots/mm - 1
-
-    let prints = 1;
-    // Shop, product, and price data
-    let shopName = "Pratapsigh Hajari";
-    let productName = "+919970530520";
-    let price = "ESC/POS lable Printer DEMO";
-    let barcode = "+919970530520";
-    function setPrints() {
-      prints = Number(document.getElementById("prints").value);
-    }
-
-    function updateText() {
-      shopName = document.getElementById("shopName").value;
-      productName = document.getElementById("productName").value;
-      price = document.getElementById("price").value;
-      barcode = document.getElementById("barcode").value;
-      console.log(shopName, productName, price, barcode);
-      drawText();
-    }
-
-
-    // Get the canvas element
-    const canvas = document.getElementById("myCanvas");
-    const ctx = canvas.getContext("2d");
-
-    // Function to draw text on the canvas
-    function drawText() {
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
-
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-      ctx.fillStyle = "#000";
-      ctx.font = "20px sans-serif";
-      ctx.textAlign = "center";
-
-      // Shop Name (top center)
-      ctx.fillText(shopName, canvasWidth / 2.7, 25);
-
-      // Product Name (middle center)
-      ctx.fillText(productName, canvasWidth / 2.7, 50);
-
-      // Price (bottom center)
-      ctx.fillText(price, canvasWidth / 2.7, 75);
-
-      // Barcode (bottom center)
-      JsBarcode("#barcodeImg", barcode, {
-        width: 2,
-        height: 40,
-        displayValue: false
-      });
-      setTimeout(() => {
-        const barcodeImg = document.getElementById("barcodeImg").src;
-        const img = new Image();
-        img.src = barcodeImg;
-        ctx.drawImage(img, 10, 80);
-      }, 100);
-    }
-
-    // Draw the initial text
-    drawText();
-
-    // Print button click event
-    document.getElementById("printButton").addEventListener("click", () => {
-      printCanvas();
-    });
-
-    // Function to print the canvas using ESC/POS commands
-    async function printCanvas() {
-      try {
-        const canvasDataURL = canvas.toDataURL('image/png'); // Get canvas as PNG
-        const img = new Image();
-        img.src = canvasDataURL;
-
-        img.onload = async () => {
-          const canvas2 = document.createElement('canvas'); // Create a temporary canvas
-          canvas2.width = canvasWidth;
-          canvas2.height = canvasHeight;
-          const ctx2 = canvas2.getContext('2d');
-          ctx2.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-
-          const imageData = ctx2.getImageData(0, 0, canvasWidth, canvasHeight);
-          const binaryData = convertImageDataToBinary(imageData);
-          const escposCommands = generateEscPosCommands(binaryData, canvasWidth, canvasHeight);
-
-          // Replace with your Bluetooth printer connection logic
-          await sendToBluetoothPrinter(escposCommands);
-
-        };
-
-      } catch (error) {
-        console.error("Error printing:", error);
-      }
-    }
-
-    // Function to convert image data to binary data (for ESC/POS)
-    function convertImageDataToBinary(imageData) {
-      const binaryData = [];
-      for (let y = 0; y < imageData.height; y++) {
-        for (let x = 0; x < imageData.width; x += 8) {
-          let byte = 0;
-          for (let bit = 0; bit < 8; bit++) {
-            const index = (y * imageData.width + x + bit) * 4;
-            if (x + bit < imageData.width) {
-              // Convert to grayscale
-              const r = imageData.data[index];
-              const g = imageData.data[index + 1];
-              const b = imageData.data[index + 2];
-              const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
-              if (grayscale < 128) { // Check for black pixel
-                byte |= (1 << (7 - bit)); // Set the corresponding bit
-              }
-            }
-          }
-          binaryData.push(byte);
+        let prints = 1;
+        // Shop, product, and price data
+        let shopName = "Pratapsigh Hajari";
+        let productName = "+919970530520";
+        let price = "ESC/POS lable Printer DEMO";
+        let barcode = "+919970530520";
+        function setPrints() {
+            prints = Number(document.getElementById("prints").value);
         }
-      }
-      return binaryData;
-    }
 
-    // Function to generate ESC/POS commands for bitmap printing
-    function generateEscPosCommands(binaryData, width, height) {
-      const escposCommands = new Uint8Array([
-        29, 118, 48, 0, // Select bit-image mode
-        width / 8, 0, // Width (bytes)
-        height, 0, // Height
-        ...binaryData, // Image data
-        29, 86, 66, 1, // Cut the paper
-      ]);
-      return escposCommands;
-    }
+        function updateText() {
+            shopName = document.getElementById("shopName").value;
+            productName = document.getElementById("productName").value;
+            price = document.getElementById("price").value;
+            barcode = document.getElementById("barcode").value;
+            console.log(shopName, productName, price, barcode);
+            drawText();
+        }
 
-    // Placeholder function for sending data to a Bluetooth printer
-    async function sendToBluetoothPrinter(escposCommands) {
 
-      //This section requires a bluetooth library. The Web Bluetooth API is not supported by all browsers and requires HTTPS.
-      //For a mobile app, you would likely use a native plugin.
-      console.log("ESC/POS Commands:", escposCommands);
-      // alert("Print function called. Bluetooth implementation is required.");
-      // Example using Web Bluetooth API (requires HTTPS and user permission)
+        // Get the canvas element
+        const canvas = document.getElementById("myCanvas");
+        const ctx = canvas.getContext("2d");
 
-      try {
-        navigator.bluetooth.requestDevice({
-          filters: [{
-            services: ['000018f0-0000-1000-8000-00805f9b34fb'] // thermal printer only
-          }]
-        })
-          .then((device) => {
-            console.log('> Found ' + device.name);
-            console.log('Connecting to GATT Server...');
-            return device.gatt.connect();
-          })
-          .then((server) => server.getPrimaryService("000018f0-0000-1000-8000-00805f9b34fb")) // init the server
-          .then((service) => service.getCharacteristic("00002af1-0000-1000-8000-00805f9b34fb")) // init the service
-          .then(async (characteristic) => {
-            console.log('Characteristic found:', characteristic);
-            // await characteristic.writeValue(escposCommands);
+        // Function to draw text on the canvas
+        function drawText() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
 
-            for (let i = 0; i < prints; i++) {
-              const chunkSize = 512; // Maximum allowed chunk size
-              let offset = 0;
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-              while (offset < escposCommands.length) {
-                const chunk = escposCommands.slice(offset, offset + chunkSize);
-                await characteristic.writeValue(chunk);
-                offset += chunkSize;
-              }
+            ctx.fillStyle = "#000";
+            ctx.font = "20px sans-serif";
+            ctx.textAlign = "center";
+
+            // Shop Name (top center)
+            ctx.fillText(shopName, canvasWidth / 2.7, 25);
+
+            // Product Name (middle center)
+            ctx.fillText(productName, canvasWidth / 2.7, 50);
+
+            // Price (bottom center)
+            ctx.fillText(price, canvasWidth / 2.7, 75);
+
+            // Barcode (bottom center)
+            JsBarcode("#barcodeImg", barcode, {
+                width: 2,
+                height: 40,
+                displayValue: false
+            });
+            setTimeout(() => {
+                const barcodeImg = document.getElementById("barcodeImg").src;
+                const img = new Image();
+                img.src = barcodeImg;
+                ctx.drawImage(img, 10, 80);
+            }, 100);
+        }
+
+        // Draw the initial text
+        drawText();
+
+        // Print button click event
+        document.getElementById("printButton").addEventListener("click", () => {
+            printCanvas();
+        });
+
+        // Function to print the canvas using ESC/POS commands
+        async function printCanvas() {
+            try {
+                const canvasDataURL = canvas.toDataURL('image/png'); // Get canvas as PNG
+                const img = new Image();
+                img.src = canvasDataURL;
+
+                img.onload = async () => {
+                    const canvas2 = document.createElement('canvas'); // Create a temporary canvas
+                    canvas2.width = canvasWidth;
+                    canvas2.height = canvasHeight;
+                    const ctx2 = canvas2.getContext('2d');
+                    ctx2.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+                    const imageData = ctx2.getImageData(0, 0, canvasWidth, canvasHeight);
+                    const binaryData = convertImageDataToBinary(imageData);
+                    const escposCommands = generateEscPosCommands(binaryData, canvasWidth, canvasHeight);
+
+                    // Replace with your Bluetooth printer connection logic
+                    await sendToBluetoothPrinter(escposCommands);
+
+                };
+
+            } catch (error) {
+                console.error("Error printing:", error);
             }
+        }
 
-            console.log("Print job sent successfully.");
-          });
-      } catch (error) {
-        console.error("Bluetooth error:", error);
-      }
-    }
+        // Function to convert image data to binary data (for ESC/POS)
+        function convertImageDataToBinary(imageData) {
+            const binaryData = [];
+            for (let y = 0; y < imageData.height; y++) {
+                for (let x = 0; x < imageData.width; x += 8) {
+                    let byte = 0;
+                    for (let bit = 0; bit < 8; bit++) {
+                        const index = (y * imageData.width + x + bit) * 4;
+                        if (x + bit < imageData.width) {
+                            // Convert to grayscale
+                            const r = imageData.data[index];
+                            const g = imageData.data[index + 1];
+                            const b = imageData.data[index + 2];
+                            const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
+                            if (grayscale < 128) { // Check for black pixel
+                                byte |= (1 << (7 - bit)); // Set the corresponding bit
+                            }
+                        }
+                    }
+                    binaryData.push(byte);
+                }
+            }
+            return binaryData;
+        }
 
-  </script>
+        // Function to generate ESC/POS commands for bitmap printing
+        function generateEscPosCommands(binaryData, width, height) {
+            const escposCommands = new Uint8Array([
+                29, 118, 48, 0, // Select bit-image mode
+                width / 8, 0, // Width (bytes)
+                height, 0, // Height
+                ...binaryData, // Image data
+                29, 86, 66, 1, // Cut the paper
+            ]);
+            return escposCommands;
+        }
+
+        // Placeholder function for sending data to a Bluetooth printer
+        async function sendToBluetoothPrinter(escposCommands) {
+
+            //This section requires a bluetooth library. The Web Bluetooth API is not supported by all browsers and requires HTTPS.
+            //For a mobile app, you would likely use a native plugin.
+            console.log("ESC/POS Commands:", escposCommands);
+            // alert("Print function called. Bluetooth implementation is required.");
+            // Example using Web Bluetooth API (requires HTTPS and user permission)
+
+            try {
+                navigator.bluetooth.requestDevice({
+                    filters: [{
+                        services: ['000018f0-0000-1000-8000-00805f9b34fb'] // thermal printer only
+                    }]
+                })
+                    .then((device) => {
+                        console.log('> Found ' + device.name);
+                        console.log('Connecting to GATT Server...');
+                        return device.gatt.connect();
+                    })
+                    .then((server) => server.getPrimaryService("000018f0-0000-1000-8000-00805f9b34fb")) // init the server
+                    .then((service) => service.getCharacteristic("00002af1-0000-1000-8000-00805f9b34fb")) // init the service
+                    .then(async (characteristic) => {
+                        console.log('Characteristic found:', characteristic);
+                        // await characteristic.writeValue(escposCommands);
+
+                        for (let i = 0; i < prints; i++) {
+                            const chunkSize = 512; // Maximum allowed chunk size
+                            let offset = 0;
+
+                            while (offset < escposCommands.length) {
+                                const chunk = escposCommands.slice(offset, offset + chunkSize);
+                                await characteristic.writeValue(chunk);
+                                offset += chunkSize;
+                            }
+                        }
+
+                        console.log("Print job sent successfully.");
+                    });
+            } catch (error) {
+                console.error("Bluetooth error:", error);
+            }
+        }
+
+    </script>
 
 </body>
 
